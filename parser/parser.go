@@ -79,7 +79,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
-	stmt.Name = &ast.Indentifier{Token: p.curToken, Value: p.curToken.Literal}
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
 	if !p.expectPeek(token.ASSIGN) {
 		return nil
@@ -103,7 +103,7 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	return stmt
 }
 
-func (p *Parser) parserExpressionStatement() *ast.ExpressionStatement {
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 	stmt.Expression = p.parseExpression(LOWEST)
 
@@ -169,8 +169,8 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	return expression
 }
 
-func (p *Parser) parserIdentifier() ast.Expression {
-	return &ast.Indentifier{Token: p.curToken, Value: p.curToken.Literal}
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
@@ -212,7 +212,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return p.parserExpressionStatement()
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -241,7 +241,7 @@ func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
 
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
-	p.registerPrefix(token.IDENT, p.parserIdentifier)
+	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpresion)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpresion)

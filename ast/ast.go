@@ -43,7 +43,7 @@ func (p *Program) String() string {
 
 type LetStatement struct {
 	Value Expression
-	Name  *Indentifier
+	Name  *Identifier
 	Token token.Token // the token.LET token
 }
 
@@ -68,17 +68,17 @@ func (ls *LetStatement) String() string {
 	return out.String()
 }
 
-type Indentifier struct {
+type Identifier struct {
 	Token token.Token // the token.IDENT token
 	Value string
 }
 
-func (i *Indentifier) expressionNode() {}
-func (i *Indentifier) TokenLiteral() string {
+func (i *Identifier) expressionNode() {}
+func (i *Identifier) TokenLiteral() string {
 	return i.Token.Literal
 }
 
-func (i *Indentifier) String() string {
+func (i *Identifier) String() string {
 	return i.Value
 }
 
