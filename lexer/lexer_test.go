@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"monkeyinterpreter/token"
+	"monkey/token"
 	"testing"
 )
 

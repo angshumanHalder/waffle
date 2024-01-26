@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"monkeyinterpreter/token"
+	"monkey/token"
 	"testing"
 )
 
