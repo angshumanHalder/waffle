@@ -126,16 +126,16 @@ func TestBangOperator(t *testing.T) {
 
 func TestIfElseExpressions(t *testing.T) {
 	tests := []struct {
-		input    string
 		expected interface{}
+		input    string
 	}{
-		{"if (true) { 10 }", 10},
-		{"if (false) { 10 }", nil},
-		{"if (1) { 10 }", 10},
-		{"if (1 < 2) { 10 }", 10},
-		{"if (1 > 2) { 10 }", nil},
-		{"if (1 > 2) { 10 } else { 20 }", 20},
-		{"if (1 < 2) { 10 } else { 20 }", 10},
+		{10, "if (true) { 10 }"},
+		{nil, "if (false) { 10 }"},
+		{10, "if (1) { 10 }"},
+		{10, "if (1 < 2) { 10 }"},
+		{nil, "if (1 > 2) { 10 }"},
+		{20, "if (1 > 2) { 10 } else { 20 }"},
+		{10, "if (1 < 2) { 10 } else { 20 }"},
 	}
 
 	for _, tt := range tests {
@@ -155,4 +155,27 @@ func testNullObject(t *testing.T, obj object.Object) bool {
 		return false
 	}
 	return true
+}
+
+func TestReturnStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"return 10;", 10},
+		{"return 10; 9;", 10},
+		{"return 2 * 5; 9;", 10},
+		{"9; return 2 * 5; 9;", 10},
+		{`if (11 > 1) {
+        if (10 > 1) {
+        return 10;
+        }
+      return 1;
+      }`, 10},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
 }
