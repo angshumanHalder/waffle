@@ -87,6 +87,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		}
 		return applyFunction(function, args)
 
+	case *ast.LoopExpression:
+		return evalLoopExpression(node, env)
 	}
 
 	return nil
@@ -294,4 +296,17 @@ func unwrapReturnValue(obj object.Object) object.Object {
 		return returnValue.Value
 	}
 	return obj
+}
+
+func evalLoopExpression(le *ast.LoopExpression, env *object.Environment) object.Object {
+	var result object.Object
+	for {
+		condition := Eval(le.Condition, env)
+		if isTruthy(condition) {
+			result = Eval(le.Body, env)
+		} else {
+			break
+		}
+	}
+	return result
 }

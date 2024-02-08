@@ -298,3 +298,26 @@ func (ce *CallExpression) String() string {
 
 	return out.String()
 }
+
+type LoopExpression struct {
+	Condition Expression
+	Body      *BlockStatement
+	Token     token.Token
+}
+
+func (fe *LoopExpression) expressionNode() {}
+func (fe *LoopExpression) TokenLiteral() string {
+	return fe.Token.Literal
+}
+
+func (fe *LoopExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("loop ")
+	out.WriteString(fe.Condition.String())
+	out.WriteString(" {\n")
+	out.WriteString(fe.Body.String())
+	out.WriteString("\n}")
+
+	return out.String()
+}

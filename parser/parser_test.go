@@ -468,7 +468,7 @@ func TestIfExpression(t *testing.T) {
 
 	consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
-		t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T", exp.Consequence.Statements[0])
+		t.Fatalf("exp.Consequence.Statements[0] is not ast.ExpressionStatement. got=%T", exp.Consequence.Statements[0])
 	}
 
 	if !testIdentifier(t, consequence.Expression, "x") {
@@ -691,5 +691,45 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 					arg, exp.Arguments[i].String())
 			}
 		}
+	}
+}
+
+func TestLoopExpressionParsing(t *testing.T) {
+	input := `loop (x < 10) { y; }`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain %d statement. got=%d\n", 1, len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.LoopExpression. got=%T", program.Statements[0])
+	}
+
+	exp, ok := stmt.Expression.(*ast.LoopExpression)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.LoopExpression. got=%T", stmt.Expression)
+	}
+
+	if !testInfixExpresion(t, exp.Condition, "x", "<", 10) {
+		return
+	}
+
+	if len(exp.Body.Statements) != 1 {
+		t.Errorf("body is not 1 statements. got=%d\n", len(exp.Body.Statements))
+	}
+
+	body, ok := exp.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("exp.Body.Statements[0] is not ast.ExpressionStatement. got=%T", exp.Body.Statements[0])
+	}
+
+	if !testIdentifier(t, body.Expression, "y") {
+		return
 	}
 }

@@ -42,11 +42,12 @@ const (
 	// keywords
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
-	TRUE     = "true"
-	FALSE    = "false"
-	IF       = "if"
-	ELSE     = "else"
-	RETURN   = "return"
+	TRUE     = "TRUE"
+	FALSE    = "FALSE"
+	IF       = "IF"
+	ELSE     = "ELSE"
+	RETURN   = "RETURN"
+	LOOP     = "LOOP"
 )
 
 var keywords = map[string]TokenType{
@@ -57,6 +58,7 @@ var keywords = map[string]TokenType{
 	"if":     IF,
 	"else":   ELSE,
 	"return": RETURN,
+	"loop":   LOOP,
 }
 
 func LookupIdent(ident string) TokenType {

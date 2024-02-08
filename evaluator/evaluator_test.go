@@ -331,3 +331,17 @@ func TestClosures(t *testing.T) {
   `
 	testIntegerObject(t, testEval(input), 4)
 }
+
+func TestLoopExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let i = 0; let num = 0; loop (i < 2) { let num = num + 1; let i = i + 1; }; num;", 2},
+		{"let iterator = fn(num) { let i = 0; loop (i < 10) { let i = i + 1; let num = num + 1 }; num; }; iterator(0);", 10},
+	}
+
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.input), tt.expected)
+	}
+}
