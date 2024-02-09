@@ -1,5 +1,7 @@
 package object
 
+import "bytes"
+
 type Environment struct {
 	store map[string]Object
 	outer *Environment
@@ -21,6 +23,19 @@ func (e *Environment) Get(name string) (Object, bool) {
 func (e *Environment) Set(name string, value Object) Object {
 	e.store[name] = value
 	return value
+}
+
+// Debug purpose
+func (e *Environment) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{\n")
+	for k, v := range e.store {
+		out.WriteString(k + ": " + v.Inspect() + ",\n")
+	}
+	out.WriteString("}")
+
+	return out.String()
 }
 
 func NewEnclosedEnvironment(outer *Environment) *Environment {

@@ -30,6 +30,7 @@ var precedences = map[token.TokenType]int{
 	token.ASTERISK: PRODUCT,
 	token.MODULUS:  PRODUCT,
 	token.LPAREN:   CALL,
+	token.ASSIGN:   EQUALS,
 }
 
 type (
@@ -298,6 +299,9 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	}
 
 	precedence := p.curPrecedence()
+	if p.curTokenIs(token.ASSIGN) {
+		precedence -= 1
+	}
 	p.nextToken()
 	expression.Right = p.parseExpression(precedence)
 
@@ -432,6 +436,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.MODULUS, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
+	p.registerInfix(token.ASSIGN, p.parseInfixExpression)
 
 	p.nextToken()
 	p.nextToken()

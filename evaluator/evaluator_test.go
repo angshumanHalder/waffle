@@ -209,6 +209,14 @@ func TestErrorHandling(t *testing.T) {
 		expectedMessage string
 	}{
 		{
+			"1 = 2;",
+			"invalid identifier: 1",
+		},
+		{
+			"let a = b;",
+			"identifier not found: b",
+		},
+		{
 			"5 + true;",
 			"type mismatch: INTEGER + BOOLEAN",
 		},
@@ -272,6 +280,7 @@ func TestLetStatements(t *testing.T) {
 		{"let a = 5 * 5; a;", 25},
 		{"let a = 5; let b = a; b;", 5},
 		{"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+		{"let a = 5; let b = 12; a = b; a;", 12},
 	}
 
 	for _, tt := range tests {
