@@ -347,7 +347,7 @@ func TestLoopExpression(t *testing.T) {
 		expected int64
 	}{
 		{"let i = 0; let num = 0; loop (i < 2) { let num = num + 1; let i = i + 1; }; num;", 2},
-		{"let iterator = fn(num) { let i = 0; loop (i < 10) { let i = i + 1; let num = num + 1 }; num; }; iterator(0);", 10},
+		{"let iterator = fn(num) { let i = 0; loop (i < 10) { let i = i + 1; num = num + 1 }; num; }; iterator(0);", 10},
 	}
 
 	for _, tt := range tests {
