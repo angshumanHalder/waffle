@@ -7,26 +7,32 @@ import (
 
 func TestNextToken(t *testing.T) {
 	input := `let five = 5;
-  let ten = 10;
+	 let ten = 10;
 
-  let add = fn(x, y) {
-  x + y;
-  };
+	 let add = fn(x, y) {
+	 x + y;
+	 };
 
-  let result = add(five, ten);
-  !-/*5;
-  5 < 10 > 5;
+	 let result = add(five, ten);
+	 !-/*5;
+	 5 < 10 > 5;
 
-  if (5 < 10) {
-    return true;
-  } else {
-    return false;
-  }
+	 if (5 < 10) {
+	   return true;
+	 } else {
+	   return false;
+	 }
 
-  10 == 10;
-  10 != 9;
-  10 % 5;
-  foobar = 10;
+	 10 == 10;
+	 10 != 9;
+	 10 % 5;
+	 foobar = 10;
+   "foobar"
+   "foo bar"
+   "foo\tbar"
+   "foo\rbar"
+   "foo\nbar"
+   "hello \"world\""
   `
 
 	tests := []struct {
@@ -114,6 +120,12 @@ func TestNextToken(t *testing.T) {
 		{token.ASSIGN, "="},
 		{token.INT, "10"},
 		{token.SEMICOLON, ";"},
+		{token.STRING, "foobar"},
+		{token.STRING, "foo bar"},
+		{token.STRING, "foo\tbar"},
+		{token.STRING, "foo\rbar"},
+		{token.STRING, "foo\nbar"},
+		{token.STRING, "hello \"world\""},
 		{token.EOF, ""},
 	}
 

@@ -1,6 +1,13 @@
 package lexer
 
-import "monkey/token"
+import (
+	"monkey/token"
+)
+
+const (
+	UNESCAPED = iota
+	ESCAPED
+)
 
 type Lexer struct {
 	input        string
@@ -40,6 +47,45 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
+func (l *Lexer) readString() string {
+	var out []byte
+	state := UNESCAPED
+
+	for {
+		l.readChar()
+		if l.ch == '"' && state == UNESCAPED {
+			break
+		} else if l.ch == 0 {
+			return ""
+		}
+		switch state {
+		case UNESCAPED:
+			if l.ch == '\\' {
+				state = ESCAPED
+			} else {
+				out = append(out, l.ch)
+			}
+		case ESCAPED:
+			l.addEscapeCharacters(&out, l.ch)
+			state = UNESCAPED
+		}
+	}
+	return string(out)
+}
+
+func (l *Lexer) addEscapeCharacters(out *[]byte, ch byte) {
+	switch ch {
+	case 't':
+		*out = append(*out, '\t')
+	case 'n':
+		*out = append(*out, '\n')
+	case 'r':
+		*out = append(*out, '\r')
+	case '\\', '"':
+		*out = append(*out, ch)
+	}
+}
+
 func (l *Lexer) readNumber() string {
 	position := l.position
 	for isDigit(l.ch) {
@@ -66,6 +112,10 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 
 	switch l.ch {
+	case '"':
+		s := l.readString()
+		tok.Type = token.STRING
+		tok.Literal = s
 	case '=':
 		if l.peekChar() == '=' {
 			ch := l.ch

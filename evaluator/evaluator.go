@@ -108,6 +108,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 	case *ast.LoopExpression:
 		return evalLoopExpression(node, env)
+
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
 	}
 
 	return nil

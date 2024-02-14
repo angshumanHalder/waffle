@@ -354,3 +354,25 @@ func TestLoopExpression(t *testing.T) {
 		testIntegerObject(t, testEval(tt.input), tt.expected)
 	}
 }
+
+func TestStringLiteral(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{input: `"Hello World!"`, expected: "Hello World!"},
+		{input: `"Hello \t World!"`, expected: "Hello \t World!"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		str, ok := evaluated.(*object.String)
+		if !ok {
+			t.Fatalf("object is not String. got=%T (+%v)", evaluated, evaluated)
+		}
+
+		if str.Value != tt.expected {
+			t.Errorf("String has wrong value. got=%q", str.Value)
+		}
+	}
+}

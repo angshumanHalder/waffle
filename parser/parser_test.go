@@ -735,3 +735,30 @@ func TestLoopExpressionParsing(t *testing.T) {
 		return
 	}
 }
+
+func TestStringLiteralExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{input: `"Hello World!"`, expected: "Hello World!"},
+		{input: `"Hello \t World!"`, expected: "Hello \t World!"},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		literal, ok := stmt.Expression.(*ast.StringLiteral)
+		if !ok {
+			t.Fatalf("exp not *ast.StringLiteral. got=%T", stmt.Expression)
+		}
+
+		if literal.Value != tt.expected {
+			t.Errorf("literal.Value not %q. got=%q", "Hello World", literal.Value)
+		}
+	}
+}
