@@ -432,3 +432,33 @@ func TestStringComparison(t *testing.T) {
 		}
 	}
 }
+
+func TestBuiltInFunctions(t *testing.T) {
+	tests := []struct {
+		expected interface{}
+		input    string
+	}{
+		{0, `len("")`},
+		{4, `len("four")`},
+		{11, `len("hello world")`},
+		{"argument to `len` not supported, got INTEGER", `len(1)`},
+		{"wrong number of arguments. got=2, want=1", `len("one", "two")`},
+	}
+
+	for _, tt := range tests {
+		evaluted := testEval(tt.input)
+		switch expected := tt.expected.(type) {
+		case int:
+			testIntegerObject(t, evaluted, int64(expected))
+		case string:
+			errObj, ok := evaluted.(*object.Error)
+			if !ok {
+				t.Errorf("object is not Error. got=%T (%+v)", evaluted, evaluted)
+				continue
+			}
+			if errObj.Message != expected {
+				t.Errorf("Wrong error message. expected=%q, got=%q", expected, errObj.Message)
+			}
+		}
+	}
+}
