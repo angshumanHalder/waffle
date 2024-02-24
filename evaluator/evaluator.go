@@ -58,19 +58,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		var right object.Object
 
 		if node.Operator == "=" {
-			ident, ok := node.Left.(*ast.Identifier)
-			if !ok {
-				return newError("invalid identifier: " + node.Left.String())
-			}
-			if _, present := env.Get(ident.Value); !present {
-				return newError("identifier not found: " + node.Left.String())
-			}
-			right = Eval(node.Right, env)
-			if isError(right) {
-				return right
-			}
-			env.Set(ident.Value, right)
-			return right
+			return evaluateAssignmentExpressions(node.Left, node.Right, env)
 		}
 
 		left = Eval(node.Left, env)
@@ -108,6 +96,17 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 	case *ast.LoopExpression:
 		return evalLoopExpression(node, env)
+
+	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+		index := Eval(node.Index, env)
+		if isError(index) {
+			return index
+		}
+		return evalIndexExpression(left, index)
 
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}
@@ -360,4 +359,82 @@ func evalLoopExpression(le *ast.LoopExpression, env *object.Environment) object.
 		}
 	}
 	return result
+}
+
+func evalIndexExpression(left, index object.Object) object.Object {
+	switch {
+	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+		return evalArrayIndexExpression(left, index)
+	default:
+		return newError("index operator not supported: %s", left.Type())
+	}
+}
+
+func evalArrayIndexExpression(array, index object.Object) object.Object {
+	arrayObj := array.(*object.Array)
+	idx := index.(*object.Integer).Value
+	max := int64(len(arrayObj.Elements) - 1)
+	if idx < 0 || idx > max {
+		return NULL
+	}
+	return arrayObj.Elements[idx]
+}
+
+func evaluateAssignmentExpressions(left ast.Expression, right ast.Expression, env *object.Environment) object.Object {
+	switch left := left.(type) {
+
+	case *ast.Identifier:
+		if _, present := env.Get(left.Value); !present {
+			return newError("identifier not found: " + left.String())
+		}
+		rightObj := Eval(right, env)
+		if isError(rightObj) {
+			return rightObj
+		}
+		env.Set(left.Value, rightObj)
+		return rightObj
+
+	case *ast.IndexExpression:
+		leftObj := Eval(left.Left, env)
+		if isError(leftObj) {
+			return leftObj
+		}
+		index := Eval(left.Index, env)
+		if isError(index) {
+			return index
+		}
+
+		if leftObj.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ {
+			arrayObj := leftObj.(*object.Array)
+			idx := index.(*object.Integer).Value
+			max := int64(len(arrayObj.Elements) - 1)
+			if idx < 0 || idx > max {
+				return NULL
+			}
+
+			rightObj := Eval(right, env)
+			if isError(rightObj) {
+				return rightObj
+			}
+
+			if rightObj.Type() == object.ARRAY_OBJ {
+				rightArrObj := rightObj.(*object.Array)
+
+				if rightArrObj == arrayObj {
+					newArrObj := &object.Array{}
+					newArrObj.Elements = make([]object.Object, len(rightArrObj.Elements))
+					copy(newArrObj.Elements, rightArrObj.Elements)
+					arrayObj.Elements[idx] = newArrObj
+					return rightObj
+				}
+
+			}
+
+			arrayObj.Elements[idx] = rightObj
+			return rightObj
+		}
+		return newError("index operator not supported: %s", leftObj.Type())
+	default:
+		return newError("invalid identifier: " + left.String())
+	}
 }

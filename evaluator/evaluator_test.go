@@ -270,7 +270,7 @@ func TestErrorHandling(t *testing.T) {
 		}
 
 		if errObj.Message != tt.expectedMessage {
-			t.Errorf("wrong error message. expected=%q,fgot=%q", tt.expectedMessage, errObj.Message)
+			t.Errorf("wrong error message. expected=%q, got=%q", tt.expectedMessage, errObj.Message)
 		}
 	}
 }
@@ -479,4 +479,70 @@ func TestArrayLiterals(t *testing.T) {
 	testIntegerObject(t, result.Elements[0], 1)
 	testIntegerObject(t, result.Elements[1], 4)
 	testIntegerObject(t, result.Elements[2], 6)
+}
+
+func TestArrayIndexExpressions(t *testing.T) {
+	tests := []struct {
+		expected interface{}
+		input    string
+	}{
+		{
+			1,
+			"[1, 2, 3][0]",
+		},
+		{
+			2,
+			"[1, 2, 3][1]",
+		},
+		{
+			3,
+			"[1, 2, 3][2]",
+		},
+		{
+			1,
+			"let i = 0; [1][i]",
+		},
+		{
+			3,
+			"[1, 2, 3][1 + 1]",
+		},
+		{
+			3,
+			"let myArray = [1, 2, 3]; myArray[2];",
+		},
+		{
+			6,
+			"let  myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2]",
+		},
+		{
+			2,
+			"let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];",
+		},
+		{
+			nil,
+			"[1, 2, 3][3]",
+		},
+		{
+			nil,
+			"[1, 2, 3][-1]",
+		},
+		{
+			8,
+			"let myArray = [1, 2, 3]; myArray[0] = 8; myArray[0];",
+		},
+		{
+			1,
+			"let a = [1]; a[0] = a; a[0][0];",
+		},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		integer, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNullObject(t, evaluated)
+		}
+	}
 }
