@@ -260,7 +260,12 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 
 	p.nextToken()
 
-	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
+	for !p.curTokenIs(token.RBRACE) {
+		if p.curTokenIs(token.EOF) {
+			msg := "could not parse as block Statement"
+			p.errors = append(p.errors, msg)
+			return nil
+		}
 		stmt := p.parseStatement()
 		block.Statements = append(block.Statements, stmt)
 
