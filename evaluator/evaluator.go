@@ -368,6 +368,8 @@ func evalIndexExpression(left, index object.Object) object.Object {
 	switch {
 	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
 		return evalArrayIndexExpression(left, index)
+	case left.Type() == object.HASH_OBJ:
+		return evalHashIndexExpression(left, index)
 	default:
 		return newError("index operator not supported: %s", left.Type())
 	}
@@ -398,47 +400,89 @@ func evaluateAssignmentExpressions(left ast.Expression, right ast.Expression, en
 		return rightObj
 
 	case *ast.IndexExpression:
-		leftObj := Eval(left.Left, env)
-		if isError(leftObj) {
-			return leftObj
-		}
-		index := Eval(left.Index, env)
-		if isError(index) {
-			return index
+		return evaluateIndexAssignmentExpression(left, right, env)
+	default:
+		return newError("invalid identifier: " + left.String())
+	}
+}
+
+func evaluateIndexAssignmentExpression(left *ast.IndexExpression, right ast.Expression, env *object.Environment) object.Object {
+	leftObj := Eval(left.Left, env)
+	if isError(leftObj) {
+		return leftObj
+	}
+	index := Eval(left.Index, env)
+	if isError(index) {
+		return index
+	}
+
+	switch {
+
+	case leftObj.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+		arrayObj := leftObj.(*object.Array)
+		idx := index.(*object.Integer).Value
+		max := int64(len(arrayObj.Elements) - 1)
+		if idx < 0 || idx > max {
+			return NULL
 		}
 
-		if leftObj.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ {
-			arrayObj := leftObj.(*object.Array)
-			idx := index.(*object.Integer).Value
-			max := int64(len(arrayObj.Elements) - 1)
-			if idx < 0 || idx > max {
-				return NULL
-			}
+		rightObj := Eval(right, env)
+		if isError(rightObj) {
+			return rightObj
+		}
 
-			rightObj := Eval(right, env)
-			if isError(rightObj) {
+		if rightObj.Type() == object.ARRAY_OBJ {
+			rightArrObj := rightObj.(*object.Array)
+
+			if rightArrObj == arrayObj {
+				newArrObj := &object.Array{}
+				newArrObj.Elements = make([]object.Object, len(rightArrObj.Elements))
+				copy(newArrObj.Elements, rightArrObj.Elements)
+				arrayObj.Elements[idx] = newArrObj
 				return rightObj
 			}
 
-			if rightObj.Type() == object.ARRAY_OBJ {
-				rightArrObj := rightObj.(*object.Array)
+		}
+		arrayObj.Elements[idx] = rightObj
+		return rightObj
 
-				if rightArrObj == arrayObj {
-					newArrObj := &object.Array{}
-					newArrObj.Elements = make([]object.Object, len(rightArrObj.Elements))
-					copy(newArrObj.Elements, rightArrObj.Elements)
-					arrayObj.Elements[idx] = newArrObj
-					return rightObj
-				}
+	case leftObj.Type() == object.HASH_OBJ:
+		hashKey, ok := index.(object.Hashable)
+		if !ok {
+			return newError("unusable as hash key: %s", index.Type())
+		}
 
-			}
-
-			arrayObj.Elements[idx] = rightObj
+		rightObj := Eval(right, env)
+		if isError(rightObj) {
 			return rightObj
 		}
-		return newError("index operator not supported: %s", leftObj.Type())
+
+		hashObject, ok := leftObj.(*object.Hash)
+		if !ok {
+			return NULL
+		}
+
+		hashed := hashKey.HashKey()
+
+		if rightObj.Type() == object.HASH_OBJ {
+			rightHashObj := rightObj.(*object.Hash)
+
+			if rightHashObj == hashObject {
+				newHashObj := &object.Hash{}
+				newHashObj.Pairs = make(map[object.HashKey]object.HashPair)
+				for k, v := range rightHashObj.Pairs {
+					newHashObj.Pairs[k] = object.HashPair{Key: v.Key, Value: v.Value}
+				}
+				hashObject.Pairs[hashed] = object.HashPair{Key: index, Value: newHashObj}
+				return rightHashObj
+			}
+		}
+
+		hashObject.Pairs[hashed] = object.HashPair{Key: index, Value: rightObj}
+		return hashObject
+
 	default:
-		return newError("invalid identifier: " + left.String())
+		return newError("index operator not supported: %s", leftObj.Type())
 	}
 }
 
@@ -466,4 +510,20 @@ func evalHashLiteral(node *ast.HashLiteral, env *object.Environment) object.Obje
 	}
 
 	return &object.Hash{Pairs: pairs}
+}
+
+func evalHashIndexExpression(hash, index object.Object) object.Object {
+	hashObject := hash.(*object.Hash)
+
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return newError("unusable as hash key: %s", index.Type())
+	}
+
+	pair, ok := hashObject.Pairs[key.HashKey()]
+	if !ok {
+		return NULL
+	}
+
+	return pair.Value
 }
