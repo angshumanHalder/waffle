@@ -2,6 +2,12 @@
 
 Waffle is a dynamic programming language. With minimal data types and syntax.
 
+# Installation 
+1. Clone the repo.
+2. Download and install go compiler.
+3. cd into the repo and run `go build main.go`
+4. Once the build process completes just run the binary.
+
 # Syntax
 
 ### Declarations 
