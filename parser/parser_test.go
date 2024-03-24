@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"monkey/ast"
 	"monkey/lexer"
+	"strconv"
 	"testing"
 )
 
@@ -241,6 +242,26 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 	return true
 }
 
+func testFloatLiteral(t *testing.T, fl ast.Expression, value float64) bool {
+	float, ok := fl.(*ast.FloatLiteral)
+	if !ok {
+		t.Errorf("fl not *ast.FloatLiteral. got=%T", fl)
+		return false
+	}
+
+	if float.Value != value {
+		t.Errorf("float.Value not %f. got=%f", value, float.Value)
+		return false
+	}
+	valueStr := strconv.FormatFloat(value, 'f', -1, 64)
+	if float.TokenLiteral() != valueStr {
+		t.Errorf("float.TokenLiteral not %s. got=%s", valueStr, float.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
 func TestParsingInfixExpression(t *testing.T) {
 	infixTests := []struct {
 		leftValue  interface{}
@@ -257,6 +278,7 @@ func TestParsingInfixExpression(t *testing.T) {
 		{5, 5, "5 == 5;", "=="},
 		{5, 5, "5 != 5;", "!="},
 		{10, 4, "10 % 4;", "%"},
+		{10, 3.21, "10 / 3.21", "/"},
 		{true, true, "true == true", "=="},
 		{true, false, "true != false", "!="},
 		{false, false, "false == false", "=="},
@@ -303,6 +325,7 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
 		{"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
 		{"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+		{"3.1 + 4.2 * 5 == 3 * 1 + 4.12 * 5", "((3.1 + (4.2 * 5)) == ((3 * 1) + (4.12 * 5)))"},
 		{"true", "true"},
 		{"false", "false"},
 		{"3 > 5 == false", "((3 > 5) == false)"},
@@ -379,6 +402,10 @@ func testLiteralExpression(t *testing.T, exp ast.Expression, expected interface{
 		return testIntegerLiteral(t, exp, int64(v))
 	case int64:
 		return testIntegerLiteral(t, exp, v)
+	case float32:
+		return testFloatLiteral(t, exp, float64(v))
+	case float64:
+		return testFloatLiteral(t, exp, v)
 	case string:
 		return testIdentifier(t, exp, v)
 	case bool:
@@ -766,7 +793,7 @@ func TestStringLiteralExpressionParsing(t *testing.T) {
 }
 
 func TestArrayLiteralsParsing(t *testing.T) {
-	input := "[1, 2 * 2, 3 + 3]"
+	input := "[1, 2 * 2, 3 + 3.1]"
 
 	l := lexer.New(input)
 	p := New(l)
@@ -785,7 +812,7 @@ func TestArrayLiteralsParsing(t *testing.T) {
 
 	testIntegerLiteral(t, array.Elements[0], 1)
 	testInfixExpresion(t, array.Elements[1], 2, "*", 2)
-	testInfixExpresion(t, array.Elements[2], 3, "+", 3)
+	testInfixExpresion(t, array.Elements[2], 3, "+", float64(3.1))
 }
 
 func TestIndexExpressionParsing(t *testing.T) {
