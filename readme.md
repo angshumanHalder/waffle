@@ -45,11 +45,14 @@ puts(false): // false
 
 ```
 ### Numbers
-Floating point support isn't currently there. Will be added in future.
 ```
 let a = 1;
 let b = 2;
 puts(a / b) // 0
+
+let a = 1.1;
+let b = 2;
+puts(a / b); // 0.55
 ```
 
 ### Objects
