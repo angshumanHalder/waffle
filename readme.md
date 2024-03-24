@@ -61,7 +61,13 @@ puts(a / b); // 0.55
 ### Objects
 Objects supports integers, booleans and strings as keys.
 ```
-let myHash = {"name": "Jimmy", "age": 72, "band": "Led Zeppelin", 99: "integer", true: "true"};
+let myHash = {
+  "name": "Jimmy",
+  "age": 72,
+  "band": "Led Zeppelin",
+  99: "integer",
+  true: "true"
+};
 puts(myHash["name"]); // Jimmy
 
 let key = "age";
