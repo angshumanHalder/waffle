@@ -15,6 +15,7 @@ const (
 	IDENT  = "IDENT"
 	INT    = "INT"
 	STRING = "STRING"
+	FLOAT  = "FLOAT"
 
 	// Operators
 	ASSIGN   = "="
