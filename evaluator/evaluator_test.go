@@ -4,6 +4,7 @@ import (
 	"monkey/lexer"
 	"monkey/object"
 	"monkey/parser"
+	"strconv"
 	"testing"
 )
 
@@ -37,6 +38,26 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 }
 
+func TestEvalFloatExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected float64
+	}{
+		{"5.1", 5.1},
+		{"-5.1", -5.1},
+		{"-10.2", -10.2},
+		{"5.1 + 5 + 5 + 5 - 10", 10.100000000000001},
+		{"-50 + 100.1", 50.099999999999994},
+		{"20 + 2 * -10.0", 0.0},
+		{"(5 + 10 * 2 + 15 % 3.0) * 2 + -10", 40.0},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testFloatObject(t, evaluated, tt.expected)
+	}
+}
+
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
@@ -61,6 +82,22 @@ func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 	return true
 }
 
+func testFloatObject(t *testing.T, obj object.Object, expected float64) bool {
+	result, ok := obj.(*object.Float)
+	if !ok {
+		t.Errorf("object is not Float. got=%T (%+v)", obj, obj)
+		return false
+	}
+	resultStr := strconv.FormatFloat(result.Value, 'f', -1, 64)
+	expectedStr := strconv.FormatFloat(expected, 'f', -1, 64)
+	if resultStr != expectedStr {
+		t.Errorf("object has wrong value. got=%f, want=%f", result.Value, expected)
+		return false
+	}
+
+	return true
+}
+
 func TestEvalBooleanExpression(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -76,6 +113,7 @@ func TestEvalBooleanExpression(t *testing.T) {
 		{"1 != 1", false},
 		{"1 == 2", false},
 		{"1 != 2", true},
+		{"1.1 != 1.1", false},
 		{"true == true", true},
 		{"false == false", true},
 		{"true == false", false},
@@ -223,6 +261,10 @@ func TestErrorHandling(t *testing.T) {
 		{
 			"5 + true; 5;",
 			"type mismatch: INTEGER + BOOLEAN",
+		},
+		{
+			"5.0 + true; 5;",
+			"type mismatch: FLOAT + BOOLEAN",
 		},
 		{
 			"-true",
