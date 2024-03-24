@@ -2,6 +2,9 @@
 
 Waffle is a dynamic programming language. With minimal data types and syntax.
 
+ [!WARNING] 
+**This is a toy language. It's not even optimised and cannot be used in production.**
+
 # Installation 
 1. Clone the repo.
 2. Download and install go compiler.
