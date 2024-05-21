@@ -17,10 +17,12 @@ type Definition struct {
 
 const (
 	OpConstant Opcode = iota
+	OpAdd
 )
 
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
+	OpAdd:      {"OpAdd", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {
@@ -71,7 +73,7 @@ func (ins Instructions) String() string {
 		}
 
 		operands, read := ReadOperands(def, ins[i+1:])
-		fmt.Fprintf(&out, "%04d %s\n ", i, ins.fmtInstructions(def, operands))
+		fmt.Fprintf(&out, "%04d %s\n", i, ins.fmtInstructions(def, operands))
 
 		i += 1 + read
 	}
@@ -87,6 +89,8 @@ func (ins Instructions) fmtInstructions(def *Definition, operands []int) string 
 	}
 
 	switch operandCount {
+	case 0:
+		return def.Name
 	case 1:
 		return fmt.Sprintf("%s %d", def.Name, operands[0])
 	}

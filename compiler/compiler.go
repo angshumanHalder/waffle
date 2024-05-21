@@ -51,6 +51,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
+		switch node.Operator {
+		case "+":
+			c.emit(code.OpAdd)
+		default:
+			return fmt.Errorf("unknown operator: %s", node.Operator)
+		}
+
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(integer))
@@ -72,7 +79,6 @@ func (c *Compiler) addConstant(obj object.Object) int {
 }
 
 func (c *Compiler) emit(op code.Opcode, operands ...int) int {
-	fmt.Println(operands)
 	ins := code.Make(op, operands...)
 	pos := c.addInstructions(ins)
 	return pos
