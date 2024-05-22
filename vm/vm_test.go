@@ -7,6 +7,7 @@ import (
 	"monkey/lexer"
 	"monkey/object"
 	"monkey/parser"
+	"strconv"
 	"testing"
 )
 
@@ -48,6 +49,12 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 		if err != nil {
 			t.Errorf("testIntegerObject failed: %s", err)
 		}
+
+	case float64:
+		err := testFloatObject(float64(expected), actual)
+		if err != nil {
+			t.Errorf("testFloatObject failed: %s", err)
+		}
 	}
 }
 
@@ -70,6 +77,21 @@ func testIntegerObject(expected int64, actual object.Object) error {
 	return nil
 }
 
+func testFloatObject(expected float64, actual object.Object) error {
+	result, ok := actual.(*object.Float)
+	if !ok {
+		return fmt.Errorf("object is not float. got=%T(+%v)", actual, actual)
+	}
+
+	resultStr := strconv.FormatFloat(result.Value, 'f', -1, 64)
+	expectedStr := strconv.FormatFloat(expected, 'f', -1, 64)
+	if resultStr != expectedStr {
+		return fmt.Errorf("object has wrong value. got=%f want=%f", result.Value, expected)
+	}
+
+	return nil
+}
+
 func TestIntegerArithmetic(t *testing.T) {
 	tests := []vmTestCase{
 		{"1", 1},
@@ -86,6 +108,26 @@ func TestIntegerArithmetic(t *testing.T) {
 		{"5 * (2 + 10)", 60},
 		{"10 % 2", 0},
 		{"(10 % 5) + 1", 1},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestFloatArithmetic(t *testing.T) {
+	tests := []vmTestCase{
+		{"1.0", 1.0},
+		{"2.0", 2.0},
+		{"1.0 + 2", 3.0},
+		{"1 - 2.0", -1.0},
+		{"1.0 * 2", 2.0},
+		{"4.0 / 2", 2.0},
+		{"50.0 / 2 * 2 + 10 - 5", 55.0},
+		{"5 + 5 + 5 + 5.0 - 10", 10.0},
+		{"2 * 2 * 2 * 2 * 2.0", 32.0},
+		{"5 * (2 + 10.0)", 60.0},
+		{"10.0 % 2", 0.0},
+		{"(10 % 5) + 1.0", 1.0},
+		{"5.1 + 5 + 5 + 5 - 10", 10.100000000000001},
 	}
 
 	runVmTests(t, tests)
