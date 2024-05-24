@@ -55,6 +55,12 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 		if err != nil {
 			t.Errorf("testFloatObject failed: %s", err)
 		}
+
+	case bool:
+		err := testBooleanObject(bool(expected), actual)
+		if err != nil {
+			t.Errorf("testBooleanObject failed: %s", err)
+		}
 	}
 }
 
@@ -89,6 +95,17 @@ func testFloatObject(expected float64, actual object.Object) error {
 		return fmt.Errorf("object has wrong value. got=%f want=%f", result.Value, expected)
 	}
 
+	return nil
+}
+
+func testBooleanObject(expected bool, actual object.Object) error {
+	result, ok := actual.(*object.Boolean)
+	if !ok {
+		return fmt.Errorf("object is not Boolean. got=%T(+%v)", actual, actual)
+	}
+	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. got=%t want=%t", result.Value, expected)
+	}
 	return nil
 }
 
@@ -128,6 +145,15 @@ func TestFloatArithmetic(t *testing.T) {
 		{"10.0 % 2", 0.0},
 		{"(10 % 5) + 1.0", 1.0},
 		{"5.1 + 5 + 5 + 5 - 10", 10.100000000000001},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestBooleanExpressions(t *testing.T) {
+	tests := []vmTestCase{
+		{"true", true},
+		{"false", false},
 	}
 
 	runVmTests(t, tests)
