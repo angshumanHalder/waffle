@@ -23,6 +23,13 @@ type VM struct {
 	sp    int // Always point to next value (top = stack[sp - 1])
 }
 
+func nativeBooleanObject(input bool) *object.Boolean {
+	if input {
+		return True
+	}
+	return False
+}
+
 func New(bytecode *compiler.Bytecode) *VM {
 	return &VM{
 		instructions: bytecode.Instructions,
@@ -50,6 +57,12 @@ func (vm *VM) Run() error {
 
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv, code.OpMod:
 			err := vm.executeBinaryOperation(op)
+			if err != nil {
+				return err
+			}
+
+		case code.OpEqual, code.OpGreaterThan, code.OpNotEqual:
+			err := vm.executeComparison(op)
 			if err != nil {
 				return err
 			}
@@ -164,4 +177,73 @@ func (vm *VM) executeBinaryFloatOperation(op code.Opcode, left, right object.Obj
 		return fmt.Errorf("unknown float operation: %d", op)
 	}
 	return vm.push(&object.Float{Value: result})
+}
+
+func (vm *VM) executeComparison(op code.Opcode) error {
+	right := vm.pop()
+	left := vm.pop()
+
+	if left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ {
+		return vm.executeIntegerComparison(op, left, right)
+	}
+
+	if (left.Type() == object.FLOAT_OBJ || left.Type() == object.INTEGER_OBJ) &&
+		(right.Type() == object.FLOAT_OBJ || right.Type() == object.INTEGER_OBJ) {
+		return vm.executeFloatComparison(op, left, right)
+	}
+
+	switch op {
+	case code.OpEqual:
+		return vm.push(nativeBooleanObject(right == left))
+	case code.OpNotEqual:
+		return vm.push(nativeBooleanObject(right != left))
+	default:
+		return fmt.Errorf("unknown operator: %d (%s %s)", op, left.Type(), right.Type())
+	}
+}
+
+func (vm *VM) executeIntegerComparison(op code.Opcode, left, right object.Object) error {
+	leftValue := left.(*object.Integer).Value
+	rightValue := right.(*object.Integer).Value
+
+	switch op {
+	case code.OpEqual:
+		return vm.push(nativeBooleanObject(rightValue == leftValue))
+	case code.OpNotEqual:
+		return vm.push(nativeBooleanObject(rightValue != leftValue))
+	case code.OpGreaterThan:
+		return vm.push(nativeBooleanObject(leftValue > rightValue))
+	default:
+		return fmt.Errorf("unknown operator: %d", op)
+	}
+}
+
+func (vm *VM) executeFloatComparison(op code.Opcode, left, right object.Object) error {
+	var leftValue float64
+	var rightValue float64
+
+	if left.Type() == object.INTEGER_OBJ {
+		value := left.(*object.Integer).Value
+		leftValue = float64(value)
+	} else {
+		leftValue = left.(*object.Float).Value
+	}
+
+	if right.Type() == object.INTEGER_OBJ {
+		value := right.(*object.Integer).Value
+		rightValue = float64(value)
+	} else {
+		rightValue = right.(*object.Float).Value
+	}
+
+	switch op {
+	case code.OpEqual:
+		return vm.push(nativeBooleanObject(rightValue == leftValue))
+	case code.OpNotEqual:
+		return vm.push(nativeBooleanObject(rightValue != leftValue))
+	case code.OpGreaterThan:
+		return vm.push(nativeBooleanObject(leftValue > rightValue))
+	default:
+		return fmt.Errorf("unknown operator: %d", op)
+	}
 }
