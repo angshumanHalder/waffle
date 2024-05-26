@@ -125,6 +125,10 @@ func TestIntegerArithmetic(t *testing.T) {
 		{"5 * (2 + 10)", 60},
 		{"10 % 2", 0},
 		{"(10 % 5) + 1", 1},
+		{"-5", -5},
+		{"-10", -10},
+		{"-50 + 100 + -50", 0},
+		{"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50},
 	}
 
 	runVmTests(t, tests)
@@ -145,6 +149,8 @@ func TestFloatArithmetic(t *testing.T) {
 		{"10.0 % 2", 0.0},
 		{"(10 % 5) + 1.0", 1.0},
 		{"5.1 + 5 + 5 + 5 - 10", 10.100000000000001},
+		{"20 + 2 * -10.0", 0.0},
+		{"(5 + 10 * 2 + 15 % 3.0) * 2 + -10", 40.0},
 	}
 
 	runVmTests(t, tests)
@@ -172,6 +178,12 @@ func TestBooleanExpressions(t *testing.T) {
 		{"(1 > 2) == false", true},
 		{"1.1 != 1.1", false},
 		{"1.121 > 1.1", true},
+		{"!true", false},
+		{"!false", true},
+		{"!5", false},
+		{"!!true", true},
+		{"!!false", false},
+		{"!!5", true},
 	}
 
 	runVmTests(t, tests)

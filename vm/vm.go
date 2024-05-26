@@ -79,6 +79,18 @@ func (vm *VM) Run() error {
 				return err
 			}
 
+		case code.OpBang:
+			err := vm.executeBangOperator()
+			if err != nil {
+				return err
+			}
+
+		case code.OpMinus:
+			err := vm.executeMinusOperator()
+			if err != nil {
+				return err
+			}
+
 		case code.OpPop:
 			vm.pop()
 		}
@@ -245,5 +257,34 @@ func (vm *VM) executeFloatComparison(op code.Opcode, left, right object.Object) 
 		return vm.push(nativeBooleanObject(leftValue > rightValue))
 	default:
 		return fmt.Errorf("unknown operator: %d", op)
+	}
+}
+
+func (vm *VM) executeBangOperator() error {
+	operand := vm.pop()
+
+	switch operand {
+	case True:
+		return vm.push(False)
+	case False:
+		return vm.push(True)
+	default:
+		return vm.push(False)
+	}
+}
+
+func (vm *VM) executeMinusOperator() error {
+	operand := vm.pop()
+
+	switch operand.Type() {
+	case object.INTEGER_OBJ:
+		value := operand.(*object.Integer).Value
+		return vm.push(&object.Integer{Value: -value})
+
+	case object.FLOAT_OBJ:
+		value := operand.(*object.Float).Value
+		return vm.push(&object.Float{Value: -value})
+	default:
+		return fmt.Errorf("unsupported type for negation: %s", operand.Type())
 	}
 }
