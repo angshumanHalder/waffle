@@ -8,7 +8,10 @@ import (
 	"monkey/object"
 )
 
-const STACKSIZE = 2048
+const (
+	STACKSIZE   = 2048
+	GLOBALSSIZE = 65536
+)
 
 var (
 	True  = &object.Boolean{Value: true}
@@ -22,6 +25,8 @@ type VM struct {
 
 	stack []object.Object
 	sp    int // Always point to next value (top = stack[sp - 1])
+
+	globals []object.Object
 }
 
 func nativeBooleanObject(input bool) *object.Boolean {
@@ -37,7 +42,14 @@ func New(bytecode *compiler.Bytecode) *VM {
 		constants:    bytecode.Constants,
 		stack:        make([]object.Object, STACKSIZE),
 		sp:           0,
+		globals:      make([]object.Object, GLOBALSSIZE),
 	}
+}
+
+func NewWithGlobalStore(bytecode *compiler.Bytecode, s []object.Object) *VM {
+	vm := New(bytecode)
+	vm.globals = s
+	return vm
 }
 
 func (vm *VM) LastPopppedStackElem() object.Object {
@@ -110,6 +122,21 @@ func (vm *VM) Run() error {
 
 		case code.OpNull:
 			err := vm.push(Null)
+			if err != nil {
+				return err
+			}
+
+		case code.OpSetGlobal:
+			globalIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+
+			vm.globals[globalIndex] = vm.pop()
+
+		case code.OpGetGlobal:
+			globalIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+
+			err := vm.push(vm.globals[globalIndex])
 			if err != nil {
 				return err
 			}
